@@ -1,0 +1,732 @@
+local function _a()
+    local _gc = (typeof(getgc) == "function") and getgc or nil
+    local _hf = (typeof(hookfunction) == "function") and hookfunction or nil
+    local _gm = (typeof(getrawmetatable) == "function") and getrawmetatable or nil
+    local _sr = (typeof(setreadonly) == "function") and setreadonly or nil
+    local _st = (typeof(setthreadidentity) == "function") and setthreadidentity or nil
+    local _hm = (typeof(hookmetamethod) == "function") and hookmetamethod or nil
+    local _nc = (typeof(newcclosure) == "function") and newcclosure or function(_f) return _f end
+    local _cc = (typeof(checkcaller) == "function") and checkcaller or function() return false end
+    local _gs = (typeof(getcallingscript) == "function") and getcallingscript or nil
+    local _gn = (typeof(getnamecallmethod) == "function") and getnamecallmethod or function() return "" end
+    local _cr = (typeof(cloneref) == "function") and cloneref or function(_o) return _o end
+    local _gh = (typeof(gethui) == "function") and gethui or nil
+    local _pg = (typeof(protect_gui) == "function") and protect_gui or nil
+    local _sp = (typeof(syn) == "table" and typeof(syn.protect_gui) == "function") and syn.protect_gui or nil
+
+    local _uis = _cr(game:GetService("UserInputService"))
+    local _tw = _cr(game:GetService("TweenService"))
+    local _ss = _cr(game:GetService("SoundService"))
+    local _rs = _cr(game:GetService("RunService"))
+    local _pl = _cr(game:GetService("Players"))
+    local _sa = _cr(game:GetService("Stats"))
+    local _ws = _cr(game:GetService("Workspace"))
+    
+    local _lp = _pl.LocalPlayer
+    local _cam = _ws.CurrentCamera
+
+    local _c = {
+        Void = Color3.fromHex("08090a"), Carbon = Color3.fromHex("0f1011"),
+        Obsidian = Color3.fromHex("161718"), Graphite = Color3.fromHex("23252a"),
+        Smoke = Color3.fromHex("383b3f"), Ash = Color3.fromHex("62666d"),
+        Fog = Color3.fromHex("8a8f98"), Mist = Color3.fromHex("d0d6e0"),
+        Paper = Color3.fromHex("ffffff"), Purple = Color3.fromHex("a855f7"),
+        CoralRed = Color3.fromHex("eb5757"), Green = Color3.fromHex("27a644")
+    }
+    local _fb = Enum.Font.Gotham
+    local _fm = Enum.Font.GothamMedium
+
+    local _m = {}
+    _m.__index = _m
+    function _m.new() return setmetatable({ items = {} }, _m) end
+    function _m:Add(_i) table.insert(self.items, _i); return _i end
+    function _m:Clean()
+        for _i = #self.items, 1, -1 do
+            pcall(function()
+                if typeof(self.items[_i]) == "RBXScriptConnection" then self.items[_i]:Disconnect()
+                elseif typeof(self.items[_i]) == "Instance" then self.items[_i]:Destroy() end
+            end)
+        end
+        table.clear(self.items)
+    end
+
+    local function _n(_cl, _pr, _pa)
+        local _in = Instance.new(_cl)
+        for _k, _v in pairs(_pr) do _in[_k] = _v end
+        if _pa then _in.Parent = _pa end
+        return _in
+    end
+    local function _cor(_pa, _ra) local _co = Instance.new("UICorner"); _co.CornerRadius = UDim.new(0, _ra); _co.Parent = _pa end
+    local function _gr(_pa, _ro, _c1, _c2)
+        local _g = Instance.new("UIGradient")
+        _g.Rotation = _ro or 45
+        _g.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, _c1 or _c.Paper), ColorSequenceKeypoint.new(1, _c2 or _c.Purple) })
+        _g.Parent = _pa
+    end
+    local function _sf(_id, _pi)
+        pcall(function()
+            local _sd = Instance.new("Sound")
+            _sd.SoundId = _id
+            _sd.Volume = 1.5
+            _sd.PlaybackSpeed = _pi or 1
+            _sd.Parent = _ss
+            _ss:PlayLocalSound(_sd)
+            task.delay(2, function() if _sd then _sd:Destroy() end end)
+        end)
+    end
+    -- ИСПРАВЛЕНИЕ: таблица звуков переименована в _snd (было _sc)
+    local _snd = { 
+        Click = "rbxassetid://6895079853", 
+        ToggleOn = "rbxassetid://6895079853", 
+        ToggleOff = "rbxassetid://6895079853", 
+        Open = "rbxassetid://6895079853", 
+        Close = "rbxassetid://6895079853" 
+    }
+
+    if _st then pcall(function() _st(8) end) end
+
+    if _gc and _hf then
+        pcall(function()
+            for _, _ob in pairs(_gc(true)) do
+                if type(_ob) == "table" then
+                    if type(rawget(_ob, "Detected")) == "function" then _hf(rawget(_ob, "Detected"), function() return true end) end
+                    if type(rawget(_ob, "Kill")) == "function" then _hf(rawget(_ob, "Kill"), function() return false end) end
+                    local _idx = rawget(_ob, "indexInstance")
+                    if type(_idx) == "table" and #_idx >= 2 and type(_idx[2]) == "function" then
+                        if _idx[1] == "kick" or tostring(_idx[1]):lower():find("namecall") then _hf(_idx[2], function() return false end) end
+                    end
+                end
+            end
+        end)
+    end
+
+    local _cbt
+    if _gm and _sr then
+        pcall(function()
+            local _mt = _gm(game)
+            if not _mt then return end
+            _sr(_mt, false)
+            local _oldN = _mt.__namecall
+            _mt.__namecall = _nc(function(_sl, ...)
+                if not _cc() then return _oldN(_sl, ...) end
+                if _gs then
+                    local _srp = _gs()
+                    if _srp and _srp.Name ~= "LinearMenu" and _srp.Name ~= "Linear" then return _oldN(_sl, ...) end
+                end
+                local _mth = _gn()
+                local _arg = table.pack(...)
+                
+                if _mth == "FindFirstChild" or _mth == "FindFirstChildWhichIsA" or _mth == "FindFirstChildOfClass" then
+                    if _arg[1] == "LinearMenu" or _arg[1] == "LinearStats" or _arg[1] == "LinearFOV" then return nil end
+                end
+
+                if _cbt and _cbt.Silent and _cbt.SilentTarget and _cbt.SilentTarget.Parent then
+                    local _tp = _cbt:GetPredictedPos(_cbt.SilentTarget)
+                    
+                    if math.random(1, 100) > _cbt.HitChance then
+                        _tp = _tp + Vector3.new(math.random(-15, 15), math.random(-10, 10), math.random(-15, 15))
+                    end
+
+                    if _mth == "Raycast" or _mth == "FindPartOnRay" or _mth == "FindPartOnRayWithIgnoreList" then
+                        if _arg[2] and typeof(_arg[2]) == "Vector3" and typeof(_arg[1]) == "Vector3" then
+                            _arg[2] = (_tp - _arg[1]).Unit * _arg[2].Magnitude
+                            return _oldN(_sl, table.unpack(_arg, 1, _arg.n))
+                        end
+                    elseif _mth == "FireServer" then
+                        for _i, _v in ipairs(_arg) do
+                            if typeof(_v) == "Vector3" then _arg[_i] = _tp
+                            elseif typeof(_v) == "CFrame" then _arg[_i] = CFrame.new(_v.Position, _tp) end
+                        end
+                        return _oldN(_sl, table.unpack(_arg, 1, _arg.n))
+                    end
+                end
+                return _oldN(_sl, ...)
+            end)
+            _sr(_mt, true)
+        end)
+    end
+
+    local _fg = _n("ScreenGui", { Name = "LinearStats", Parent = (_gh and _gh()) or game:GetService("CoreGui"), ResetOnSpawn = false })
+    local _slb = _n("TextLabel", { Size = UDim2.fromOffset(160, 36), Position = UDim2.new(0, 10, 0, 10), BackgroundTransparency = 0.5, BackgroundColor3 = _c.Void, Text = "FPS: 60 | Ping: 0ms", Font = _fm, TextSize = 14, TextColor3 = _c.Paper, TextXAlignment = Enum.TextXAlignment.Left, BorderSizePixel = 0, Visible = false, Parent = _fg })
+    _cor(_slb, 6); _n("UIStroke", { Color = _c.Graphite, Parent = _slb })
+    
+    task.spawn(function()
+        while task.wait(1) do
+            if _slb.Visible then
+                local _pn = _sa.Network.ServerStatsItem["Data Ping"]:GetValueString()
+                local _fp = math.floor(1 / _rs.RenderStepped:Wait())
+                _slb.Text = string.format("  FPS: %d | Ping: %s", _fp, _pn)
+            end
+        end
+    end)
+
+    local _mv = { EnabledSpeed = false, SpeedValue = 16, EnabledJump = false, JumpValue = 50, BhopEnabled = false, Maid = _m.new(), SpeedVelocity = nil, lastJump = 0 }
+
+    function _mv:ApplySpeed()
+        local _ch = _lp.Character
+        local _hr = _ch and _ch:FindFirstChild("HumanoidRootPart")
+        local _hu = _ch and _ch:FindFirstChildOfClass("Humanoid")
+        if not _hr or not _hu then return end
+        if self.SpeedVelocity then self.SpeedVelocity:Destroy(); self.SpeedVelocity = nil end
+
+        if self.EnabledSpeed then
+            _hu.WalkSpeed = 16
+            self.SpeedVelocity = Instance.new("LinearVelocity")
+            self.SpeedVelocity.MaxForce = math.huge
+            self.SpeedVelocity.VelocityConstraintMode = Enum.VelocityConstraintMode.Plane
+            self.SpeedVelocity.PrimaryTangentAxis = Vector3.new(1, 0, 0)
+            self.SpeedVelocity.SecondaryTangentAxis = Vector3.new(0, 0, 1)
+            local _at = Instance.new("Attachment", _hr)
+            self.SpeedVelocity.Attachment0 = _at
+            self.SpeedVelocity.Parent = _hr
+
+            self.Maid:Add(_rs.Heartbeat:Connect(function()
+                if self.EnabledSpeed and _hu.MoveDirection.Magnitude > 0 and self.SpeedVelocity then
+                    self.SpeedVelocity.PlaneVelocity = Vector2.new(_hu.MoveDirection.X, _hu.MoveDirection.Z) * self.SpeedValue
+                elseif self.SpeedVelocity then
+                    self.SpeedVelocity.PlaneVelocity = Vector2.new(0, 0)
+                end
+            end))
+        else
+            _hu.WalkSpeed = 16
+        end
+    end
+
+    function _mv:ApplyJump()
+        local _ch = _lp.Character
+        local _hu = _ch and _ch:FindFirstChildOfClass("Humanoid")
+        if _hu then
+            if self.EnabledJump then
+                if _hu.UseJumpPower then _hu.JumpPower = self.JumpValue else _hu.JumpHeight = self.JumpValue / 3.5 end
+            else
+                _hu.JumpPower = 50; _hu.JumpHeight = 7.2
+            end
+        end
+    end
+
+    function _mv:Start()
+        self.Maid:Add(_lp.CharacterAdded:Connect(function() task.wait(1); self:ApplySpeed(); self:ApplyJump() end))
+        self.Maid:Add(_rs.Heartbeat:Connect(function()
+            if self.BhopEnabled and _lp.Character then
+                local _hu = _lp.Character:FindFirstChildOfClass("Humanoid")
+                if _hu and _hu.FloorMaterial ~= Enum.Material.Air and _hu.MoveDirection.Magnitude > 0 then
+                    local _nw = os.clock()
+                    if _nw - self.lastJump > 0.15 + (math.random(1, 10) / 100) then
+                        _hu.Jump = true; self.lastJump = _nw
+                    end
+                end
+            end
+        end))
+    end
+    _mv:Start()
+
+    _cbt = { 
+        Enabled = false, Silent = false, ShowFOV = false, WallCheck = false, Prediction = false, 
+        TargetPlayers = false, TargetBots = false, MaxDist = 250, FOV = 200, SilentFOV = 200, 
+        Smoothness = 0.5, PredictionAmount = 0.165, AimbotTarget = nil, SilentTarget = nil, 
+        Dodge = false, HitChance = 95, Connections = {}
+    }
+
+    local _fgu = _n("ScreenGui", { Name = "LinearFOV", Parent = (_gh and _gh()) or game:GetService("CoreGui"), ResetOnSpawn = false, IgnoreGuiInset = true })
+    local _af = _n("Frame", { Size = UDim2.fromOffset(200, 200), Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Visible = false, Parent = _fgu })
+    _cor(_af, 9999); _n("UIStroke", { Color = _c.Paper, Thickness = 1.5, Parent = _af })
+    local _sfv = _n("Frame", { Size = UDim2.fromOffset(200, 200), Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Visible = false, Parent = _fgu })
+    _cor(_sfv, 9999); _gr(_n("UIStroke", { Color = _c.Purple, Thickness = 1.5, Parent = _sfv }))
+
+    function _cbt:UpdateFOVs()
+        _af.Size = UDim2.fromOffset(self.FOV * 2, self.FOV * 2)
+        _sfv.Size = UDim2.fromOffset(self.SilentFOV * 2, self.SilentFOV * 2)
+    end
+    _cbt:UpdateFOVs()
+
+    function _cbt:IsVisible(_tp)
+        if not self.WallCheck then return true end
+        local _rp = RaycastParams.new()
+        _rp.FilterType = Enum.RaycastFilterType.Exclude
+        _rp.FilterDescendantsInstances = { _lp.Character, _tp.Parent }
+        local _rsl = _ws:Raycast(_cam.CFrame.Position, (_tp.Position - _cam.CFrame.Position), _rp)
+        return _rsl == nil
+    end
+
+    function _cbt:GetTarget(_fs)
+        local _ct, _md = nil, math.huge
+        local _mr = _lp.Character and _lp.Character:FindFirstChild("HumanoidRootPart")
+        if not _mr then return nil end
+
+        local function _ev(_ob, _ip)
+            if (_ip and not self.TargetPlayers) or (not _ip and not self.TargetBots) then return end
+            local _hu = _ob:FindFirstChildOfClass("Humanoid")
+            local _hd = _ob:FindFirstChild("Head") or _ob:FindFirstChild("HumanoidRootPart")
+            if _hu and _hd and _hu.Health > 0 then
+                local _dt = (_hd.Position - _mr.Position).Magnitude
+                if _dt <= self.MaxDist then
+                    local _ps, _os = _cam:WorldToViewportPoint(_hd.Position)
+                    if _os then
+                        local _dc = (Vector2.new(_ps.X, _ps.Y) - _cam.ViewportSize / 2).Magnitude
+                        if _dc <= _fs and self:IsVisible(_hd) then
+                            if _dt < _md then _md = _dt; _ct = _hd end
+                        end
+                    end
+                end
+            end
+        end
+
+        for _, _plr in ipairs(_pl:GetPlayers()) do
+            if _plr ~= _lp and _plr.Character then _ev(_plr.Character, true) end
+        end
+        if self.TargetBots then
+            for _, _ob in ipairs(_ws:GetChildren()) do
+                if _ob:IsA("Model") and _pl:GetPlayerFromCharacter(_ob) == nil then _ev(_ob, false)
+                elseif _ob:IsA("Folder") then
+                    for _, _sb in ipairs(_ob:GetChildren()) do
+                        if _sb:IsA("Model") and _pl:GetPlayerFromCharacter(_sb) == nil then _ev(_sb, false) end
+                    end
+                end
+            end
+        end
+        return _ct
+    end
+
+    function _cbt:GetPredictedPos(_tp)
+        if not self.Prediction then return _tp.Position end
+        return _tp.Position + (_tp.AssemblyLinearVelocity * self.PredictionAmount)
+    end
+
+    function _cbt:Start()
+        _rs:BindToRenderStep("LinearAimbot", Enum.RenderPriority.Camera.Value + 1, function()
+            _af.Visible = self.Enabled and self.ShowFOV
+            _sfv.Visible = self.Silent and self.ShowFOV
+            
+            if self.Enabled and self.AimbotTarget and self.AimbotTarget.Parent then
+                local _tp = self:GetPredictedPos(self.AimbotTarget)
+                local _ccf = _cam.CFrame
+                local _tcf = CFrame.new(_ccf.Position, _tp)
+                _cam.CFrame = _ccf:Lerp(_tcf, self.Smoothness)
+            end
+        end)
+
+        table.insert(self.Connections, task.spawn(function()
+            while task.wait(0.1) do
+                if self.Enabled then self.AimbotTarget = self:GetTarget(self.FOV) else self.AimbotTarget = nil end
+                if self.Silent then self.SilentTarget = self:GetTarget(self.SilentFOV) else self.SilentTarget = nil end
+            end
+        end))
+
+        table.insert(self.Connections, task.spawn(function()
+            while task.wait(0.2) do
+                if self.Dodge and _lp.Character then
+                    local _mr = _lp.Character:FindFirstChild("HumanoidRootPart")
+                    if _mr then
+                        for _, _ob in ipairs(_ws:GetChildren()) do
+                            if _ob:IsA("BasePart") and _ob ~= _mr and _ob.Parent ~= _lp.Character then
+                                local _vl = _ob.AssemblyLinearVelocity
+                                if _vl.Magnitude > 40 and (_ob.Position - _mr.Position).Magnitude < 25 then
+                                    if _vl.Unit:Dot((_mr.Position - _ob.Position).Unit) > 0.8 then
+                                        local _dd = _mr.CFrame.RightVector * (math.random(1,2)==1 and 1 or -1)
+                                        local _rp = RaycastParams.new(); _rp.FilterDescendantsInstances = {_lp.Character}
+                                        if not _ws:Raycast(_mr.Position, _dd * 10, _rp) then
+                                            _mr.CFrame = CFrame.new(_mr.Position + _dd * 10) * _mr.CFrame.Rotation
+                                        end
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end))
+    end
+
+    function _cbt:Destroy() 
+        for _, _c in ipairs(self.Connections) do _c:Disconnect() end; 
+        pcall(function() _rs:UnbindFromRenderStep("LinearAimbot") end)
+        if _fgu then _fgu:Destroy() end 
+    end
+    _cbt:Start()
+
+    local _esp = { Objects = {}, Connections = {}, Maid = _m.new(), Settings = { People = false, Bots = false, Name = false, ID = false, HP = false, Dist = false, Hitbox = false, PeopleColor = _c.Paper, BotsColor = _c.Purple } }
+    
+    function _esp:CreateGui(_ob, _ip)
+        if not _ob or not _ob.Parent or self.Objects[_ob] then return end
+        local _hu = _ob:FindFirstChildOfClass("Humanoid"); local _hd = _ob:FindFirstChild("Head")
+        local _rt = _ob:FindFirstChild("HumanoidRootPart") or _ob:FindFirstChild("Torso") or _ob:FindFirstChild("UpperTorso")
+        if not _hu or not _hd or not _rt then return end
+
+        local _cg = (_gh and _gh()) or game:GetService("CoreGui")
+        local _cl = _ip and self.Settings.PeopleColor or self.Settings.BotsColor
+        
+        local _hl = Instance.new("Highlight"); _hl.Name = "LinearESP"; _hl.Adornee = _ob; _hl.FillColor = _cl; _hl.FillTransparency = 0.7; _hl.OutlineColor = _cl; _hl.OutlineTransparency = 0; _hl.Parent = _cg
+        local _bx = Instance.new("SelectionBox"); _bx.Name = "LinearHitbox"; _bx.Adornee = _ob; _bx.Color3 = _c.Paper; _bx.LineThickness = 0.05; _bx.SurfaceTransparency = 1; _bx.Parent = _cg
+        local _ha = Instance.new("Part"); _ha.Name = "LinearHalo"; _ha.Shape = Enum.PartType.Cylinder; _ha.Size = Vector3.new(0.1, 2.5, 2.5); _ha.Material = Enum.Material.Neon; _ha.Color = _cl; _ha.CanCollide = false; _ha.CanQuery = false; _ha.Massless = true; _ha.Parent = _cg
+        local _wl = Instance.new("Weld"); _wl.Part0 = _hd; _wl.Part1 = _ha; _wl.C0 = CFrame.new(0, 0.2, 0) * CFrame.Angles(0, 0, math.rad(90)); _wl.Parent = _ha
+        
+        local _bg = Instance.new("BillboardGui"); _bg.Name = "LinearESP_Text"; _bg.Adornee = _hd; _bg.Size = UDim2.new(0, 200, 0, 60); _bg.StudsOffset = Vector3.new(0, 1.5, 0); _bg.AlwaysOnTop = true; _bg.Parent = _cg
+        local _tp = Instance.new("TextLabel"); _tp.Size = UDim2.new(1, 0, 0.5, 0); _tp.Position = UDim2.new(0, 0, 0, 0); _tp.BackgroundTransparency = 1; _tp.Font = _fm; _tp.TextSize = 14; _tp.TextColor3 = _c.Paper; _tp.TextStrokeTransparency = 0.5; _tp.Parent = _bg
+        local _bt = Instance.new("TextLabel"); _bt.Size = UDim2.new(1, 0, 0.5, 0); _bt.Position = UDim2.new(0, 0, 0.5, 0); _bt.BackgroundTransparency = 1; _bt.Font = _fb; _bt.TextSize = 12; _bt.TextColor3 = _c.Mist; _bt.TextStrokeTransparency = 0.5; _bt.Parent = _bg
+        
+        self.Objects[_ob] = { Highlight = _hl, Box = _bx, Halo = _ha, Gui = _bg, TopText = _tp, BottomText = _bt, IsPlayer = _ip }
+    end
+
+    function _esp:Remove(_ob)
+        if self.Objects[_ob] then
+            local _d = self.Objects[_ob]
+            for _, _i in pairs(_d) do if typeof(_i) == "Instance" then _i:Destroy() end end
+            self.Objects[_ob] = nil
+        end
+    end
+
+    function _esp:Evaluate(_ob)
+        if not _ob:IsA("Model") then return end
+        local _hu = _ob:FindFirstChildOfClass("Humanoid"); if not _hu then return end
+        local _plr = _pl:GetPlayerFromCharacter(_ob); if _plr == _lp then return end
+        if _plr and self.Settings.People then self:CreateGui(_ob, true) elseif not _plr and self.Settings.Bots then self:CreateGui(_ob, false) end
+    end
+
+    function _esp:Update(_ns)
+        for _k, _v in pairs(_ns) do self.Settings[_k] = _v end
+        if not self.Settings.People then for _o1, _d1 in pairs(self.Objects) do if _d1.IsPlayer then self:Remove(_o1) end end end
+        if not self.Settings.Bots then for _o2, _d2 in pairs(self.Objects) do if not _d2.IsPlayer then self:Remove(_o2) end end end
+        for _o3, _d3 in pairs(self.Objects) do local _c3 = _d3.IsPlayer and self.Settings.PeopleColor or self.Settings.BotsColor; if _d3.Highlight then _d3.Highlight.FillColor = _c3; _d3.Highlight.OutlineColor = _c3 end; if _d3.Halo then _d3.Halo.Color = _c3 end end
+        if self.Settings.People or self.Settings.Bots then 
+            for _, _o4 in ipairs(_ws:GetChildren()) do 
+                self:Evaluate(_o4)
+                if _o4:IsA("Folder") then for _, _s4 in ipairs(_o4:GetChildren()) do self:Evaluate(_s4) end end
+            end 
+        end
+    end
+
+    function _esp:Start()
+        table.insert(self.Connections, _ws.DescendantAdded:Connect(function(_o5) task.wait(0.1); if _o5:IsA("Model") then self:Evaluate(_o5) end end))
+        table.insert(self.Connections, _rs.RenderStepped:Connect(function()
+            if not self.Settings.People and not self.Settings.Bots then return end
+            local _mr = _lp.Character and (_lp.Character:FindFirstChild("HumanoidRootPart") or _lp.Character:FindFirstChild("Torso")); local _mp = _mr and _mr.Position
+            for _o6, _d6 in pairs(self.Objects) do
+                local _hu = _o6:FindFirstChildOfClass("Humanoid"); local _rt = _o6:FindFirstChild("HumanoidRootPart") or _o6:FindFirstChild("Torso") or _o6:FindFirstChild("UpperTorso")
+                if not _o6.Parent or not _hu or not _rt then self:Remove(_o6) else
+                    local _tps = {}; if self.Settings.Name then local _p6 = _pl:GetPlayerFromCharacter(_o6); table.insert(_tps, _p6 and _p6.Name or _o6.Name) end; if self.Settings.ID then local _p7 = _pl:GetPlayerFromCharacter(_o6); table.insert(_tps, _p7 and string.format("[%d]", _p7.UserId) or "") end
+                    _d6.TopText.Text = table.concat(_tps, " "); _d6.TopText.Visible = (#_tps > 0)
+                    local _bts = {}; if self.Settings.HP then table.insert(_bts, string.format("HP: %d", math.floor(_hu.Health))) end; if self.Settings.Dist and _mp then table.insert(_bts, string.format("%dm", math.floor((_rt.Position - _mp).Magnitude))) end
+                    _d6.BottomText.Text = table.concat(_bts, " | "); _d6.BottomText.Visible = (#_bts > 0)
+                    if _d6.Halo then _d6.Halo.Transparency = self.Settings.Hitbox and 0 or 1 end; if _d6.Box then _d6.Box.Visible = self.Settings.Hitbox end
+                end
+            end
+        end))
+    end
+    function _esp:Destroy() for _, _c in ipairs(self.Connections) do _c:Disconnect() end; table.clear(self.Connections); for _o, _ in pairs(self.Objects) do self:Remove(_o) end end
+    _esp:Start()
+
+    local _mn = {}; _mn.__index = _mn
+    function _mn.new(_cfg) 
+        local _sl = setmetatable({}, _mn); _sl.Maid = _m.new(); _sl.Tabs = {}; _sl.ActiveTab = nil; _sl.Cfg = _cfg or { Title = "Linear" }
+        _sl:Build(); getgenv().LinearMenu = _sl; return _sl 
+    end
+    
+    function _mn:Build()
+        local _md = self.Maid; local _pa = (_gh and _gh()) or game:GetService("CoreGui")
+        local _gu = _n("ScreenGui", { Name = "LinearMenu", ResetOnSpawn = false, IgnoreGuiInset = true, DisplayOrder = 999999, ZIndexBehavior = Enum.ZIndexBehavior.Sibling }, _pa)
+        if _pg then pcall(_pg, _gu) elseif _sp then pcall(_sp, _gu) end
+        _md:Add(_gu)
+        
+        local _vp = _ws.CurrentCamera and _ws.CurrentCamera.ViewportSize or Vector2.new(1920, 1080)
+        if _vp.X <= 0 or _vp.Y <= 0 then _vp = Vector2.new(1920, 1080) end
+        local _im = _uis.TouchEnabled and not _uis.KeyboardEnabled
+        local _bw, _bh = _im and 340 or 680, _im and 300 or 480
+        
+        local _wn = _n("Frame", { Name = "Window", Size = UDim2.fromOffset(_bw, _bh), Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = _c.Carbon, BorderSizePixel = 0, Visible = true, ClipsDescendants = true }, _gu)
+        _cor(_wn, 12)
+        
+        local _bgi = _n("ImageLabel", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Image = "rbxassetid://118141028332692", ScaleType = Enum.ScaleType.Crop, ZIndex = 1, Parent = _wn })
+        local _bgo = _n("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = _c.Void, BackgroundTransparency = 0.3, BorderSizePixel = 0, ZIndex = 2, Parent = _wn })
+        _cor(_bgo, 12)
+        
+        _n("UIStroke", { Color = _c.Graphite, Thickness = 1, Parent = _wn, ZIndex = 3 })
+        
+        local _mb = _n("TextButton", { Name = "MiniBtn", Size = UDim2.fromOffset(48, 48), Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = _c.Carbon, Text = "L", Font = _fm, TextSize = 24, TextColor3 = _c.Purple, AutoButtonColor = false, Visible = false, BorderSizePixel = 0 }, _gu)
+        _cor(_mb, 10); _n("UIStroke", { Color = _c.Graphite, Thickness = 1, Parent = _mb })
+        
+        local _ct = _n("Frame", { Size = UDim2.new(1, 0, 1, 0), BackgroundTransparency = 1, ZIndex = 4 }, _wn)
+        local _tp = _n("Frame", { Size = UDim2.new(1, 0, 0, 48), BackgroundTransparency = 1, ZIndex = 4 }, _ct)
+        
+        _n("TextLabel", { Position = UDim2.fromOffset(16, 0), Size = UDim2.fromOffset(70, 48), BackgroundTransparency = 1, Text = self.Cfg.Title, Font = _fm, TextSize = 20, TextColor3 = _c.Paper, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4 }, _tp)
+        _n("TextLabel", { Position = UDim2.fromOffset(80, 0), Size = UDim2.fromOffset(60, 48), BackgroundTransparency = 1, Text = "● Active", Font = _fm, TextSize = 14, TextColor3 = _c.Green, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4 }, _tp)
+        _n("TextLabel", { Position = UDim2.fromOffset(135, 0), Size = UDim2.fromOffset(50, 48), BackgroundTransparency = 1, Text = "- v1.0", Font = _fb, TextSize = 14, TextColor3 = _c.Fog, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 4 }, _tp)
+
+        local _mnb = _n("TextButton", { Size = UDim2.fromOffset(32, 32), Position = UDim2.new(1, -44, 0, 8), BackgroundColor3 = _c.Graphite, Text = "—", Font = _fm, TextSize = 20, TextColor3 = _c.Mist, AutoButtonColor = false, BorderSizePixel = 0, ZIndex = 4 }, _tp)
+        _cor(_mnb, 6)
+        _mnb.MouseEnter:Connect(function() _tw:Create(_mnb, TweenInfo.new(0.15), {BackgroundColor3 = _c.Smoke}):Play() end)
+        _mnb.MouseLeave:Connect(function() _tw:Create(_mnb, TweenInfo.new(0.15), {BackgroundColor3 = _c.Graphite}):Play() end)
+        
+        local _ism = false
+        local function _tgm()
+            _ism = not _ism
+            if _ism then 
+                -- ИСПРАВЛЕНИЕ: _snd вместо _sc
+                _sf(_snd.Close, 1.2); _wn.Visible = false; _mb.Visible = true; _mb.Size = UDim2.fromOffset(10,10)
+                local _cx, _cy = _mb.AbsolutePosition.X + _mb.AbsoluteSize.X*0.5, _mb.AbsolutePosition.Y + _mb.AbsoluteSize.Y*0.5
+                _mb.Position = UDim2.fromOffset(math.clamp(_cx, 24, _vp.X-24), math.clamp(_cy, 24, _vp.Y-24))
+                _tw:Create(_mb, TweenInfo.new(0.4, Enum.EasingStyle.Back), { Size = UDim2.fromOffset(48,48) }):Play()
+            else 
+                -- ИСПРАВЛЕНИЕ: _snd вместо _sc
+                _sf(_snd.Open, 1); _mb.Visible = false; _wn.Visible = true; _wn.Size = UDim2.fromOffset(10,10)
+                local _cx, _cy = _wn.AbsolutePosition.X + _wn.AbsoluteSize.X*0.5, _wn.AbsolutePosition.Y + _wn.AbsoluteSize.Y*0.5
+                _wn.Position = UDim2.fromOffset(math.clamp(_cx, _bw*0.5, _vp.X-_bw*0.5), math.clamp(_cy, _bh*0.5, _vp.Y-_bh*0.5)); _mb.Position = _wn.Position
+                _tw:Create(_wn, TweenInfo.new(0.4, Enum.EasingStyle.Back), { Size = UDim2.fromOffset(_bw, _bh) }):Play()
+            end
+        end
+        _md:Add(_mnb.Activated:Connect(function() if not _ism then _tgm() end end)); _md:Add(_mb.Activated:Connect(function() if _ism then _tgm() end end))
+        
+        _n("Frame", { Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 0, 48), BackgroundColor3 = _c.Graphite, BorderSizePixel = 0, ZIndex = 4 }, _ct)
+        
+        local _bd = _n("Frame", { Size = UDim2.new(1, 0, 1, -112), Position = UDim2.fromOffset(0, 48), BackgroundTransparency = 1, ZIndex = 4 }, _ct)
+        local _sw = _im and 130 or 180; local _sd = _n("Frame", { Size = UDim2.new(0, _sw, 1, 0), BackgroundTransparency = 1 }, _bd)
+        _n("Frame", { Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(1, -1, 0, 0), BackgroundColor3 = _c.Graphite, BorderSizePixel = 0 }, _sd)
+        
+        local _tl = _n("Frame", { Size = UDim2.new(1, -8, 1, -16), Position = UDim2.fromOffset(4, 8), BackgroundTransparency = 1 }, _sd)
+        _n("UIListLayout", { Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder }, _tl)
+        self.Content = _n("Frame", { Size = UDim2.new(1, -_sw, 1, 0), Position = UDim2.fromOffset(_sw, 0), BackgroundTransparency = 1, ClipsDescendants = true }, _bd); self.TabList = _tl
+        
+        local _ft = _n("Frame", { Size = UDim2.new(1, 0, 0, 64), Position = UDim2.new(0, 0, 1, -64), BackgroundTransparency = 1, ZIndex = 4 }, _ct)
+        _n("Frame", { Size = UDim2.new(1, 0, 0, 1), BackgroundColor3 = _c.Graphite, BorderSizePixel = 0 }, _ft)
+        
+        local _db = _n("TextButton", { Size = UDim2.new(0.6, 0, 0, 40), Position = UDim2.new(1, -16, 0.5, 0), AnchorPoint = Vector2.new(1, 0.5), BackgroundTransparency = 1, Text = "DISCORD", Font = _fm, TextSize = 16, TextColor3 = _c.Paper, TextStrokeTransparency = 0.5, AutoButtonColor = false, BorderSizePixel = 0, ZIndex = 5 }, _ft)
+        local _bbg = _n("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = _c.Paper, BackgroundTransparency = 0.3, BorderSizePixel = 0, ZIndex = 4 }, _db)
+        _cor(_bbg, 8)
+        local _bgr = Instance.new("UIGradient")
+        _bgr.Color = ColorSequence.new({ ColorSequenceKeypoint.new(0, _c.Void), ColorSequenceKeypoint.new(0.5, _c.Purple), ColorSequenceKeypoint.new(1, _c.Void) })
+        _bgr.Parent = _bbg
+
+        task.spawn(function()
+            while _db and _db.Parent do
+                _bgr.Offset = Vector2.new(-1, 0)
+                local _twt = _tw:Create(_bgr, TweenInfo.new(3, Enum.EasingStyle.Linear), {Offset = Vector2.new(1, 0)})
+                _twt:Play()
+                _twt.Completed:Wait()
+            end
+        end)
+
+        _db.MouseEnter:Connect(function() _tw:Create(_bbg, TweenInfo.new(0.2), {BackgroundTransparency = 0.1}):Play() end)
+        _db.MouseLeave:Connect(function() _tw:Create(_bbg, TweenInfo.new(0.2), {BackgroundTransparency = 0.3}):Play() end)
+
+        _md:Add(_db.Activated:Connect(function() 
+            -- ИСПРАВЛЕНИЕ: _snd вместо _sc
+            _sf(_snd.Click, 1)
+            if setclipboard then 
+                setclipboard("https://discord.gg/your_invite_here")
+                local _ot = _db.Text
+                _db.Text = "COPIED!"
+                task.delay(2, function() if _db.Parent then _db.Text = _ot end end)
+            end 
+        end))
+        
+        self:_MakeDraggable(_wn, _tp, _mb); self:_MakeDraggable(_mb, _mb, _wn)
+    end
+
+    function _mn:_MakeDraggable(_fr, _ha, _ot)
+        local _dr, _sp, _si = false, nil, nil
+        self.Maid:Add(_ha.InputBegan:Connect(function(_i) if _i.UserInputType == Enum.UserInputType.MouseButton1 or _i.UserInputType == Enum.UserInputType.Touch then _dr = true; _si = _i.Position; _sp = _fr.Position end end))
+        self.Maid:Add(_uis.InputChanged:Connect(function(_i) if _dr and (_i.UserInputType == Enum.UserInputType.MouseMovement or _i.UserInputType == Enum.UserInputType.Touch) then local _d = _i.Position - _si; _fr.Position = UDim2.new(_sp.X.Scale, _sp.X.Offset + _d.X, _sp.Y.Scale, _sp.Y.Offset + _d.Y); if _ot then _ot.Position = _fr.Position end end end))
+        self.Maid:Add(_uis.InputEnded:Connect(function(_i) if _i.UserInputType == Enum.UserInputType.MouseButton1 or _i.UserInputType == Enum.UserInputType.Touch then _dr = false end end))
+    end
+
+    function _mn:Tab(_nm)
+        local _bt = _n("TextButton", { Size = UDim2.new(1, 0, 0, 38), BackgroundColor3 = _c.Carbon, BackgroundTransparency = 1, Text = "", AutoButtonColor = false, BorderSizePixel = 0 }, self.TabList)
+        _cor(_bt, 6); local _ac = _n("Frame", { Size = UDim2.fromOffset(0, 16), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = _c.Paper, BorderSizePixel = 0 }, _bt); _gr(_ac, 90)
+        local _lb = _n("TextLabel", { Position = UDim2.fromOffset(12, 0), Size = UDim2.new(1, -16, 1, 0), BackgroundTransparency = 1, Text = _nm, Font = _fm, TextSize = 16, TextColor3 = _c.Ash, TextXAlignment = Enum.TextXAlignment.Left }, _bt)
+        
+        local _pg = _n("ScrollingFrame", { Size = UDim2.new(1, -16, 1, -16), Position = UDim2.fromOffset(8, 8), BackgroundTransparency = 1, BorderSizePixel = 0, CanvasSize = UDim2.new(0, 0, 0, 0), AutomaticCanvasSize = Enum.AutomaticSize.Y, ScrollBarThickness = 4, ScrollBarImageColor3 = _c.Graphite, Visible = false }, self.Content)
+        
+        local _in = _n("Frame", { Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1, AutomaticSize = Enum.AutomaticSize.Y }, _pg)
+        _n("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 16), PaddingLeft = UDim.new(0, 4), PaddingRight = UDim.new(0, 10) }, _in)
+        _n("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder }, _in)
+        
+        local _tb = { Btn = _bt, Accent = _ac, Label = _lb, Page = _in, ScrollFrame = _pg }; setmetatable(_tb, { __index = self }); self.Tabs[_nm] = _tb
+        -- ИСПРАВЛЕНИЕ: _snd вместо _sc
+        self.Maid:Add(_bt.Activated:Connect(function() _sf(_snd.Click, 1.2); self:SelectTab(_nm) end)); if not self.ActiveTab then self:SelectTab(_nm) end; return _tb
+    end
+
+    function _mn:SelectTab(_nm)
+        for _n, _t in pairs(self.Tabs) do 
+            local _a = (_n == _nm)
+            _tw:Create(_t.Accent, TweenInfo.new(0.3), { Size = _a and UDim2.fromOffset(3, 16) or UDim2.fromOffset(0, 16) }):Play()
+            _tw:Create(_t.Label, TweenInfo.new(0.2), { TextColor3 = _a and _c.Paper or _c.Ash }):Play()
+            _tw:Create(_t.Btn, TweenInfo.new(0.2), { BackgroundTransparency = _a and 0.95 or 1 }):Play()
+            _t.ScrollFrame.Visible = _a 
+        end
+        self.ActiveTab = _nm
+    end
+
+    function _mn:Section(_tt)
+        local _cd = _n("Frame", { Size = UDim2.new(1, 0, 0, 0), BackgroundColor3 = _c.Obsidian, BackgroundTransparency = 0.2, AutomaticSize = Enum.AutomaticSize.Y, BorderSizePixel = 0 }, self.Page)
+        _cor(_cd, 10); _n("UIStroke", { Color = Color3.new(1,1,1), Transparency = 0.6, Thickness = 1.5, Parent = _cd })
+        _n("UIPadding", { PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), PaddingLeft = UDim.new(0, 12), PaddingRight = UDim.new(0, 12) }, _cd)
+        _n("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }, _cd)
+        _n("TextLabel", { LayoutOrder = 1, Size = UDim2.new(1, 0, 0, 20), BackgroundTransparency = 1, Text = string.upper(_tt), Font = _fm, TextSize = 16, TextColor3 = _c.Paper, TextXAlignment = Enum.TextXAlignment.Left }, _cd)
+        local _bx = _n("Frame", { LayoutOrder = 2, Size = UDim2.new(1, 0, 0, 0), BackgroundTransparency = 1, AutomaticSize = Enum.AutomaticSize.Y }, _cd)
+        _n("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder }, _bx); return _bx
+    end
+
+    -- ИСПРАВЛЕНИЕ: параметр _sec вместо _sc + звуки через _snd
+    function _mn:Toggle(_sec, _op)
+        local _st = _op.Default or false; local _rw = _n("Frame", { Size = UDim2.new(1, 0, 0, 34), BackgroundTransparency = 1 }, _sec)
+        _n("TextLabel", { Position = UDim2.fromOffset(4, 0), Size = UDim2.new(1, -70, 1, 0), BackgroundTransparency = 1, Text = _op.Title or "Toggle", Font = _fb, TextSize = 15, TextColor3 = _c.Mist, TextXAlignment = Enum.TextXAlignment.Left }, _rw)
+        local _tr = _n("TextButton", { Size = UDim2.fromOffset(44, 24), Position = UDim2.new(1, -44, 0.5, 0), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = _st and _c.Paper or _c.Graphite, Text = "", AutoButtonColor = false, BorderSizePixel = 0 }, _rw)
+        _cor(_tr, 9999); if _st then _gr(_tr, 0) end
+        local _kb = _n("Frame", { Size = UDim2.fromOffset(20, 20), Position = _st and UDim2.fromOffset(22, 2) or UDim2.fromOffset(2, 2), BackgroundColor3 = _st and _c.Void or _c.Fog, BorderSizePixel = 0 }, _tr); _cor(_kb, 9999)
+        local function _set(_v)
+            _st = _v; _sf(_v and _snd.ToggleOn or _snd.ToggleOff, 1); local _g = _tr:FindFirstChildOfClass("UIGradient")
+            if _v then if not _g then _gr(_tr, 0) end; _tr.BackgroundColor3 = _c.Paper else if _g then _g:Destroy() end; _tr.BackgroundColor3 = _c.Graphite end
+            _tw:Create(_tr, TweenInfo.new(0.3), { BackgroundColor3 = _v and _c.Paper or _c.Graphite }):Play(); _tw:Create(_kb, TweenInfo.new(0.3, Enum.EasingStyle.Quart), { Position = _v and UDim2.fromOffset(22, 2) or UDim2.fromOffset(2, 2), BackgroundColor3 = _v and _c.Void or _c.Fog }):Play()
+            if _op.Callback then task.spawn(_op.Callback, _v) end
+        end
+        self.Maid:Add(_tr.Activated:Connect(function() _set(not _st) end))
+        return { Set = _set, Get = function() return _st end }
+    end
+
+    -- ИСПРАВЛЕНИЕ: параметр _sec вместо _sc
+    function _mn:ColorSlider(_sec, _op)
+        local _rw = _n("Frame", { Size = UDim2.new(1, 0, 0, 42), BackgroundTransparency = 1 }, _sec)
+        _n("TextLabel", { Position = UDim2.fromOffset(4, 0), Size = UDim2.new(1, 0, 0, 16), BackgroundTransparency = 1, Text = _op.Title or "Color", Font = _fb, TextSize = 15, TextColor3 = _c.Mist, TextXAlignment = Enum.TextXAlignment.Left }, _rw)
+        local _cn = _n("Frame", { Position = UDim2.fromOffset(4, 22), Size = UDim2.new(1, -8, 0, 16), BackgroundTransparency = 1 }, _rw)
+        local _tr = _n("TextButton", { Position = UDim2.new(0, 8, 0.5, 0), Size = UDim2.new(1, -16, 0, 6), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = _c.Smoke, Text = "", AutoButtonColor = false, BorderSizePixel = 0 }, _cn); _cor(_tr, 3)
+        local _bt = _n("TextButton", { Size = UDim2.fromOffset(32, 32), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Text = "", AutoButtonColor = false }, _tr)
+        local _vs = _n("Frame", { Size = UDim2.fromOffset(14, 14), Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = _c.Paper, BorderSizePixel = 0 }, _bt); _cor(_vs, 9999); _n("UIStroke", { Color = _c.Void, Thickness = 2, Parent = _vs })
+        local _cr = _op.Default or Color3.fromRGB(255, 255, 255)
+        local function _ap(_px)
+            local _ab, _wd = _tr.AbsolutePosition.X, _tr.AbsoluteSize.X; if _wd <= 0 then return end
+            local _pc = math.clamp((_px - _ab) / _wd, 0, 1); _cr = Color3.fromHSV(_pc, 1, 1)
+            _bt.Position = UDim2.new(_pc, 0, 0.5, 0); if _op.Callback then task.spawn(_op.Callback, _cr) end
+        end
+        local _dg = false
+        self.Maid:Add(_tr.InputBegan:Connect(function(_i) if _i.UserInputType == Enum.UserInputType.MouseButton1 or _i.UserInputType == Enum.UserInputType.Touch then _dg = true; _ap(_i.Position.X) end end))
+        self.Maid:Add(_bt.InputBegan:Connect(function(_i) if _i.UserInputType == Enum.UserInputType.MouseButton1 or _i.UserInputType == Enum.UserInputType.Touch then _dg = true end end))
+        self.Maid:Add(_uis.InputChanged:Connect(function(_i) if _dg and (_i.UserInputType == Enum.UserInputType.MouseMovement or _i.UserInputType == Enum.UserInputType.Touch) then _ap(_i.Position.X) end end))
+        self.Maid:Add(_uis.InputEnded:Connect(function(_i) if _i.UserInputType == Enum.UserInputType.MouseButton1 or _i.UserInputType == Enum.UserInputType.Touch then _dg = false end end))
+    end
+
+    -- ИСПРАВЛЕНИЕ: параметр _sec вместо _sc
+    function _mn:Slider(_sec, _op)
+        local _rw = _n("Frame", { Size = UDim2.new(1, 0, 0, 42), BackgroundTransparency = 1 }, _sec)
+        _n("TextLabel", { Position = UDim2.fromOffset(4, 0), Size = UDim2.new(1, -50, 0, 16), BackgroundTransparency = 1, Text = _op.Title or "Slider", Font = _fb, TextSize = 15, TextColor3 = _c.Mist, TextXAlignment = Enum.TextXAlignment.Left }, _rw)
+        local _vl = _n("TextLabel", { Position = UDim2.new(1, -50, 0, 0), Size = UDim2.fromOffset(46, 16), BackgroundTransparency = 1, Text = tostring(_op.Default or _op.Min or 0), Font = _fm, TextSize = 15, TextColor3 = _c.Paper, TextXAlignment = Enum.TextXAlignment.Right }, _rw)
+        local _cn = _n("Frame", { Position = UDim2.fromOffset(4, 22), Size = UDim2.new(1, -8, 0, 16), BackgroundTransparency = 1 }, _rw)
+        local _tr = _n("TextButton", { Position = UDim2.new(0, 8, 0.5, 0), Size = UDim2.new(1, -16, 0, 6), AnchorPoint = Vector2.new(0, 0.5), BackgroundColor3 = _c.Smoke, Text = "", AutoButtonColor = false, BorderSizePixel = 0 }, _cn); _cor(_tr, 3)
+        local _fl = _n("Frame", { Size = UDim2.new(0, 0, 1, 0), BackgroundColor3 = _c.Paper, BorderSizePixel = 0 }, _tr); _cor(_fl, 3); _gr(_fl, 0)
+        local _bt = _n("TextButton", { Size = UDim2.fromOffset(32, 32), Position = UDim2.new(0, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundTransparency = 1, Text = "", AutoButtonColor = false }, _tr)
+        local _vs = _n("Frame", { Size = UDim2.fromOffset(14, 14), Position = UDim2.new(0.5, 0, 0.5, 0), AnchorPoint = Vector2.new(0.5, 0.5), BackgroundColor3 = _c.Paper, BorderSizePixel = 0 }, _bt); _cor(_vs, 9999); _n("UIStroke", { Color = _c.Void, Thickness = 2, Parent = _vs })
+        local _mn, _mx, _cr = _op.Min or 0, _op.Max or 100, _op.Default or _op.Min or 0
+        local function _ap(_px)
+            local _ab, _wd = _tr.AbsolutePosition.X, _tr.AbsoluteSize.X; if _wd <= 0 then return end
+            local _pc = math.clamp((_px - _ab) / _wd, 0, 1); _cr = math.floor((_mn + (_mx - _mn) * _pc) + 0.5)
+            _fl.Size = UDim2.new(_pc, 0, 1, 0); _bt.Position = UDim2.new(_pc, 0, 0.5, 0); _vl.Text = tostring(_cr); if _op.Callback then task.spawn(_op.Callback, _cr) end
+        end
+        local function _sv(_v)
+            _cr = math.clamp(_v, _mn, _mx)
+            local _pc = (_cr - _mn) / (_mx - _mn)
+            _fl.Size = UDim2.new(_pc, 0, 1, 0); _bt.Position = UDim2.new(_pc, 0, 0.5, 0); _vl.Text = tostring(_cr); if _op.Callback then task.spawn(_op.Callback, _cr) end
+        end
+        local _ip = (_cr - _mn) / (_mx - _mn); _fl.Size = UDim2.new(_ip, 0, 1, 0); _bt.Position = UDim2.new(_ip, 0, 0.5, 0)
+        local _dg = false
+        self.Maid:Add(_tr.InputBegan:Connect(function(_i) if _i.UserInputType == Enum.UserInputType.MouseButton1 or _i.UserInputType == Enum.UserInputType.Touch then _dg = true; _ap(_i.Position.X) end end))
+        self.Maid:Add(_bt.InputBegan:Connect(function(_i) if _i.UserInputType == Enum.UserInputType.MouseButton1 or _i.UserInputType == Enum.UserInputType.Touch then _dg = true end end))
+        self.Maid:Add(_uis.InputChanged:Connect(function(_i) if _dg and (_i.UserInputType == Enum.UserInputType.MouseMovement or _i.UserInputType == Enum.UserInputType.Touch) then _ap(_i.Position.X) end end))
+        self.Maid:Add(_uis.InputEnded:Connect(function(_i) if _i.UserInputType == Enum.UserInputType.MouseButton1 or _i.UserInputType == Enum.UserInputType.Touch then _dg = false end end))
+        return { Set = _sv, Get = function() return _cr end }
+    end
+
+    -- ИСПРАВЛЕНИЕ: параметр _sec вместо _sc + звук через _snd
+    function _mn:Button(_sec, _op)
+        local _bt = _n("TextButton", { Size = UDim2.new(1, 0, 0, 40), BackgroundColor3 = _c.Carbon, BackgroundTransparency = 0.5, Text = _op.Title or "Button", Font = _fm, TextSize = 16, TextColor3 = _c.Mist, AutoButtonColor = false, BorderSizePixel = 0 }, _sec)
+        _cor(_bt, 6); _n("UIStroke", { Color = _c.Graphite, Transparency = 0.5, Parent = _bt })
+        _bt.MouseEnter:Connect(function() _tw:Create(_bt, TweenInfo.new(0.2), { BackgroundTransparency = 0.2, BackgroundColor3 = _c.Graphite }):Play() end)
+        _bt.MouseLeave:Connect(function() _tw:Create(_bt, TweenInfo.new(0.2), { BackgroundTransparency = 0.5 }):Play() end)
+        self.Maid:Add(_bt.Activated:Connect(function() _sf(_snd.Click, 0.9); if _op.Callback then task.spawn(_op.Callback) end end))
+    end
+
+    function _mn:Destroy() 
+        if self._destroyed then return end; self._destroyed = true
+        _esp:Destroy(); _cbt:Destroy(); self.Maid:Clean()
+        if getgenv().LinearMenu == self then getgenv().LinearMenu = nil end 
+    end
+
+    local _ui = _mn.new({ Title = "Linear" })
+    local _cfr = { Toggles = {}, Sliders = {} }
+
+    local _tm = _ui:Tab("Main")
+    local _ep = _tm:Section("ESP People")
+    _cfr.Toggles.ESP_P = _tm:Toggle(_ep, { Title = "Enable ESP", Default = false, Callback = function(_on) _esp:Update({People = _on}) end })
+    _tm:ColorSlider(_ep, { Title = "Outline Color", Default = _c.Paper, Callback = function(_cl) _esp:Update({PeopleColor = _cl}) end })
+
+    local _eb = _tm:Section("ESP Bots")
+    _cfr.Toggles.ESP_B = _tm:Toggle(_eb, { Title = "Enable ESP", Default = false, Callback = function(_on) _esp:Update({Bots = _on}) end })
+    _tm:ColorSlider(_eb, { Title = "Outline Color", Default = _c.Purple, Callback = function(_cl) _esp:Update({BotsColor = _cl}) end })
+
+    local _ee = _tm:Section("ESP Elements")
+    _cfr.Toggles.ESP_Hitbox = _tm:Toggle(_ee, { Title = "Show Hitbox", Default = false, Callback = function(_on) _esp:Update({Hitbox = _on}) end })
+    _cfr.Toggles.ESP_Name = _tm:Toggle(_ee, { Title = "Show Name", Default = false, Callback = function(_on) _esp:Update({Name = _on}) end })
+    _cfr.Toggles.ESP_ID = _tm:Toggle(_ee, { Title = "Show ID", Default = false, Callback = function(_on) _esp:Update({ID = _on}) end })
+    _cfr.Toggles.ESP_HP = _tm:Toggle(_ee, { Title = "Show HP", Default = false, Callback = function(_on) _esp:Update({HP = _on}) end })
+    _cfr.Toggles.ESP_Dist = _tm:Toggle(_ee, { Title = "Show Distance", Default = false, Callback = function(_on) _esp:Update({Dist = _on}) end })
+
+    local _ts = _ui:Tab("Shooting")
+    local _as = _ts:Section("Aimbot Settings")
+    _cfr.Toggles.Aim = _ts:Toggle(_as, { Title = "Enable Aimbot", Default = false, Callback = function(_on) _cbt.Enabled = _on end })
+    _cfr.Toggles.TargetP = _ts:Toggle(_as, { Title = "Target Players", Default = false, Callback = function(_on) _cbt.TargetPlayers = _on end })
+    _cfr.Toggles.TargetB = _ts:Toggle(_as, { Title = "Target Bots", Default = false, Callback = function(_on) _cbt.TargetBots = _on end })
+    _cfr.Toggles.ShowFOV = _ts:Toggle(_as, { Title = "Show FOV", Default = false, Callback = function(_on) _cbt.ShowFOV = _on end }) 
+    _cfr.Toggles.WallCheck = _ts:Toggle(_as, { Title = "Wall Check", Default = false, Callback = function(_on) _cbt.WallCheck = _on end }) 
+    _cfr.Sliders.FOV = _ts:Slider(_as, { Title = "Aimbot FOV", Min = 50, Max = 800, Default = 200, Callback = function(_v) _cbt.FOV = _v; _cbt:UpdateFOVs() end })
+    _cfr.Sliders.Smooth = _ts:Slider(_as, { Title = "Smoothness (Higher = Faster)", Min = 0.1, Max = 1, Default = 0.5, Callback = function(_v) _cbt.Smoothness = _v end })
+
+    local _ss = _ts:Section("Silent Aim")
+    _cfr.Toggles.Silent = _ts:Toggle(_ss, { Title = "Enable Silent Aim", Default = false, Callback = function(_on) _cbt.Silent = _on end })
+    _cfr.Sliders.SilentFOV = _ts:Slider(_ss, { Title = "Silent FOV", Min = 50, Max = 800, Default = 200, Callback = function(_v) _cbt.SilentFOV = _v; _cbt:UpdateFOVs() end })
+    _cfr.Sliders.HitChance = _ts:Slider(_ss, { Title = "Hit Chance (%)", Min = 10, Max = 100, Default = 95, Callback = function(_v) _cbt.HitChance = _v end })
+
+    local _ps = _ts:Section("Prediction & Dodge")
+    _cfr.Toggles.Predict = _ts:Toggle(_ps, { Title = "Target Prediction", Default = false, Callback = function(_on) _cbt.Prediction = _on end })
+    _cfr.Toggles.Dodge = _ts:Toggle(_ps, { Title = "Auto-Dodge Bullets", Default = false, Callback = function(_on) _cbt.Dodge = _on end })
+    _cfr.Sliders.MaxDist = _ts:Slider(_ps, { Title = "Max Distance", Min = 50, Max = 500, Default = 250, Callback = function(_v) _cbt.MaxDist = _v end })
+    _ts:Button(_ps, { Title = "Re-Hook Silent Aim", Callback = function() print("[Linear] Silent Aim is active via __namecall.") end })
+
+    local _tmv = _ui:Tab("Movement")
+    local _sm = _tmv:Section("Speed Settings")
+    _cfr.Toggles.Speed = _tmv:Toggle(_sm, { Title = "Enable Speed Bypass", Default = false, Callback = function(_on) _mv.EnabledSpeed = _on; _mv:ApplySpeed() end })
+    _cfr.Sliders.WalkSpeed = _tmv:Slider(_sm, { Title = "WalkSpeed", Min = 16, Max = 200, Default = 16, Callback = function(_v) _mv.SpeedValue = _v; if _mv.EnabledSpeed then _mv:ApplySpeed() end end })
+
+    local _sj = _tmv:Section("Jump & Bhop")
+    _cfr.Toggles.Jump = _tmv:Toggle(_sj, { Title = "Enable Jump Power", Default = false, Callback = function(_on) _mv.EnabledJump = _on; _mv:ApplyJump() end })
+    _cfr.Sliders.JumpPower = _tmv:Slider(_sj, { Title = "Jump Power", Min = 50, Max = 300, Default = 50, Callback = function(_v) _mv.JumpValue = _v; if _mv.EnabledJump then _mv:ApplyJump() end end })
+    _cfr.Toggles.Bhop = _tmv:Toggle(_sj, { Title = "Auto-Bhop (While Running)", Default = false, Callback = function(_on) _mv.BhopEnabled = _on end })
+
+    local _tst = _ui:Tab("Settings")
+    local _sts = _tst:Section("Statistics & UI")
+    _cfr.Toggles.ShowStats = _tst:Toggle(_sts, { Title = "Show FPS / Ping", Default = false, Callback = function(_on) _slb.Visible = _on end })
+    
+    local _cs = _tst:Section("Configurations")
+    _tst:Button(_cs, { Title = "Load Legit Config", Callback = function()
+        for _, _t in pairs(_cfr.Toggles) do _t.Set(false) end
+        _cfr.Toggles.ESP_P:Set(true); _cfr.Toggles.ESP_Name:Set(true)
+        _cfr.Toggles.Aim:Set(true); _cfr.Toggles.TargetP:Set(true)
+        _cfr.Toggles.WallCheck:Set(true); _cfr.Sliders.Smooth:Set(0.7); _cfr.Sliders.FOV:Set(100)
+        _cfr.Sliders.HitChance:Set(85); _cfr.Toggles.Bhop:Set(true)
+        print("[Linear] Legit Config Loaded (Anti-Detect)")
+    end })
+    
+    _tst:Button(_cs, { Title = "Load Medium Config", Callback = function()
+        for _, _t in pairs(_cfr.Toggles) do _t.Set(false) end
+        _cfr.Toggles.ESP_P:Set(true); _cfr.Toggles.ESP_Name:Set(true); _cfr.Toggles.ESP_HP:Set(true)
+        _cfr.Toggles.Aim:Set(true); _cfr.Toggles.TargetP:Set(true); _cfr.Toggles.Silent:Set(true)
+        _cfr.Toggles.WallCheck:Set(true); _cfr.Sliders.Smooth:Set(0.5); _cfr.Sliders.FOV:Set(250)
+        _cfr.Sliders.HitChance:Set(92)
+        _cfr.Toggles.Speed:Set(true); _cfr.Sliders.WalkSpeed:Set(45)
+        _cfr.Toggles.Bhop:Set(true)
+        print("[Linear] Medium Config Loaded (Anti-Detect)")
+    end })
+
+    _tst:Button(_cs, { Title = "Clear Cache", Callback = function() print("Cache cleared"); if collectgarbage then collectgarbage("collect") end end })
+
+    print("[Linear] FINAL ULTRA v1.0 Ready.")
+end
+
+local _ok, _err = pcall(_a)
+if not _ok then warn("[Linear] КРИТИЧЕСКАЯ ОШИБКА: " .. tostring(_err)) end
